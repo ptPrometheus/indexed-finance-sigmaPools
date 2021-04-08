@@ -1,0 +1,113 @@
+
+type IndexPool @entity{
+  id: ID!
+  name: String!
+  symbol: String!
+  tokensList: [Bytes!]!
+  swapFee: BigDecimal!
+  totalSwapVolumeUSD: BigDecimal!
+  totalValueLockedUSD: BigDecimal!
+  undboundTokenSellerAddress: Bytes!
+  size: BigInt!
+  totalWeight: BigInt!
+  totalSupply: BigInt!
+  maxTotalSupply: BigInt!  
+  dailySnapshots: [DailyPoolSnapshot!]! @derivedFrom(field: "pool")
+  hourelySnapshot: [HourelyPoolSnapshot!]! @derivedFrom(field: "pool")
+  tokens: [UnderlyingTokens!]! @derivedFrom(field: "pool")  
+  feesTotalUSD: BigDecimal!
+  totalVolumeUSD: BigDecimal!
+  list: Lists!
+}
+
+type ListManager @entity {
+  id: ID! # ID is always 'Lists'
+  categoryIndex: Int # Number of categories that exist
+  poolsList: [String!]!
+}
+
+type Lists @entity {
+  id: ID!
+  metadataHash: Bytes!
+  tokens: [Token!]!
+  scoringStrategy: Bytes!
+  minimumScore: BigInt!
+  maximumScore: BigInt!
+  indexPools: [IndexPool!]! @derivedFrom(field: "list")
+}
+
+type Token @entity{
+  id: ID!
+  # mirrored from the smart contract
+  symbol: String!
+  name: String!
+  decimals: Int!
+  # derived prices
+  priceUSD: BigDecimal!
+}
+
+type UnderlyingTokens @entity{
+  id: ID!
+  # Whether the token is initialized
+  ready: Boolean!
+  # Index pool the record is for
+  pool: IndexPool!
+  #name, decimals, priceUSD
+  token: Token!
+  #balance of the tokens
+  balance: BigInt!
+  # Minimum number of tokens the pool must hold to allow exits
+  minimumBalance: BigInt
+  # Denormalized weight
+  denorm: BigInt!
+  # Target denormalized weight
+  desiredDenorm: BigInt!
+
+}
+
+type HourelyPoolSnapshot @entity {
+  id: ID!
+  date: Int!
+  feesTotalUSD: BigDecimal!
+  totalValueLockedUSD: BigDecimal!
+  totalSwapVolumeUSD: BigDecimal!
+  totalSupply: BigDecimal!
+  value: BigDecimal!
+  tokens: [Bytes!]!
+  balances: [BigInt!]!
+  denorms: [BigInt!]!
+  desiredDenorms: [BigInt!]!
+  pool: IndexPool!
+  totalVolumeUSD: BigDecimal!
+}
+
+type DailyPoolSnapshot @entity {
+  id: ID!
+  date: Int!
+  feesTotalUSD: BigDecimal!
+  totalValueLockedUSD: BigDecimal!
+  totalSwapVolumeUSD: BigDecimal!
+  totalSupply: BigDecimal!
+  value: BigDecimal!
+  tokens: [Bytes!]!
+  balances: [BigInt!]!
+  denorms: [BigInt!]!
+  desiredDenorms: [BigInt!]!
+  pool: IndexPool!
+  totalVolumeUSD: BigDecimal!
+}
+
+
+type Swap @entity {
+  id: ID!
+  caller: Bytes!
+  tokenIn: Bytes!
+  tokenOut: Bytes!
+  tokenAmountIn: BigInt!
+  tokenAmountOut: BigInt!
+  pool: IndexPool!
+  timestamp: Int!
+}
+
+
+
