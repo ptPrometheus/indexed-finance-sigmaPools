@@ -58,7 +58,6 @@ templates:
         - UnderlyingToken
         - Swap
         - HourelyPoolSnapshot
-        - DailyPoolSnapshot
       abis:
         - name: SigmaIndexPoolV1
           file: SigmaIndexPoolV1\abis\SigmaIndexPoolV1.json

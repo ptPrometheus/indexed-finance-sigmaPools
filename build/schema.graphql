@@ -9,24 +9,27 @@ type IndexPool @entity{
   totalValueLockedUSD: BigDecimal!
   undboundTokenSellerAddress: Bytes!
   size: BigInt!
+  #all Denorms added up
   totalWeight: BigInt!
+  #current Supply
   totalSupply: BigInt!
   maxTotalSupply: BigInt!  
-  dailySnapshots: [DailyPoolSnapshot!]! @derivedFrom(field: "pool")
-  hourelySnapshot: [HourelyPoolSnapshot!]! @derivedFrom(field: "pool")
+  #dailySnapshots: [DailyPoolSnapshot!]! @derivedFrom(field: "pool")
+  hourlySnapshot: [HourlyPoolSnapshot!]! @derivedFrom(field: "pool")
   tokens: [UnderlyingTokens!]! @derivedFrom(field: "pool")  
   feesTotalUSD: BigDecimal!
   totalVolumeUSD: BigDecimal!
   list: Lists!
+  swap: [Swap!]! @derivedFrom(field: "pool")
 }
 
-type ListManager @entity {
-  id: ID! # ID is always 'Lists'
-  categoryIndex: Int # Number of categories that exist
+type ListManager @entity{
+  id: ID!
+  categoryIndex: Int
   poolsList: [String!]!
 }
 
-type Lists @entity {
+type Lists @entity{
   id: ID!
   metadataHash: Bytes!
   tokens: [Token!]!
@@ -65,7 +68,7 @@ type UnderlyingTokens @entity{
 
 }
 
-type HourelyPoolSnapshot @entity {
+type HourlyPoolSnapshot @entity {
   id: ID!
   date: Int!
   feesTotalUSD: BigDecimal!
@@ -79,22 +82,8 @@ type HourelyPoolSnapshot @entity {
   desiredDenorms: [BigInt!]!
   pool: IndexPool!
   totalVolumeUSD: BigDecimal!
-}
-
-type DailyPoolSnapshot @entity {
-  id: ID!
-  date: Int!
-  feesTotalUSD: BigDecimal!
-  totalValueLockedUSD: BigDecimal!
-  totalSwapVolumeUSD: BigDecimal!
-  totalSupply: BigDecimal!
-  value: BigDecimal!
-  tokens: [Bytes!]!
-  balances: [BigInt!]!
-  denorms: [BigInt!]!
-  desiredDenorms: [BigInt!]!
-  pool: IndexPool!
-  totalVolumeUSD: BigDecimal!
+  hour: BigInt!
+  blockNumber: BigInt!
 }
 
 

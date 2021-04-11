@@ -14,7 +14,7 @@ import {
 
 
 //Entitys
-import { IndexPool, UnderlyingTokens, Token, Swap, HourelyPoolSnapshot, ListManager, Lists, DailyPoolSnapshot} from "../../generated/schema";
+import { IndexPool, UnderlyingTokens, Token, Swap, HourlyPoolSnapshot, Lists, ListManager} from "../../generated/schema";
 
 //Pool Events
 import { LOG_DENORM_UPDATED, LOG_DESIRED_DENORM_SET, LOG_SWAP, LOG_JOIN, LOG_EXIT, Transfer, LOG_TOKEN_REMOVED, LOG_TOKEN_ADDED, LOG_TOKEN_READY, LOG_MINIMUM_BALANCE_UPDATED, LOG_MAX_TOKENS_UPDATED, LOG_SWAP_FEE_UPDATED } from "../../generated/templates/SigmaIndexPoolV1/SigmaIndexPoolV1"
@@ -47,7 +47,7 @@ function updateTokenPrices(pool: IndexPool): void {
   }
 }
 
-function updateDailySnapshot(pool: IndexPool, event: ethereum.Event): void {
+/*function updateDailySnapshot(pool: IndexPool, event: ethereum.Event): void {
   let timestamp = event.block.timestamp.toI32();
   let dayID = timestamp / 86400;
   let poolDayID = event.address
@@ -98,25 +98,23 @@ function updateDailySnapshot(pool: IndexPool, event: ethereum.Event): void {
   snapshot.totalSwapVolumeUSD = pool.totalSwapVolumeUSD
   snapshot.totalVolumeUSD = pool.totalVolumeUSD
   snapshot.save();
-}
+}*/
 
 function updateHourelySnapshot(pool: IndexPool, event: ethereum.Event): void {
   let timestamp = event.block.timestamp.toI32();
   let dayID = timestamp / 3600;
-  let poolDayID = event.address
-    .toHexString()
-    .concat('-')
-    .concat(BigInt.fromI32(dayID).toString());
-  let snapshot = HourelyPoolSnapshot.load(poolDayID);
+  let poolDayID = event.address.toHexString().concat('-').concat(BigInt.fromI32(dayID).toString());
+  let snapshot = HourlyPoolSnapshot.load(poolDayID);
   if (snapshot == null) {
-    snapshot = new HourelyPoolSnapshot
+    snapshot = new HourlyPoolSnapshot
     (poolDayID);
   }
-
+  snapshot.hour = BigInt.fromI32(dayID);
   snapshot.pool = event.address.toHexString();
   snapshot.date = dayID * 3600;
+  snapshot.blockNumber = event.block.number;
 
-  let underlyingTokens = pool.tokens;
+
   let tokenAddresses = pool.tokensList;
   let balances = new Array<BigInt>()
   let denorms = new Array<BigInt>()
@@ -234,11 +232,11 @@ export function handlePoolInitialized(event: PoolInitialized): void {
   let poolAddress = event.params.pool;
   SigmaIndexPoolV1.create(poolAddress);
 
-  let listManager = getListManager();
+  /*let listManager = getListManager();
   let poolsList = listManager.poolsList;
   poolsList.push(poolAddress.toHexString());
   listManager.poolsList = poolsList;
-  listManager.save();
+  listManager.save();*/
 
   
   //#bind Contract and use Getters
@@ -297,7 +295,7 @@ export function handleSwap(event: LOG_SWAP): void {
   let swapFeeValue = swapValue.times(pool.swapFee)
 
   updateHourelySnapshot(pool as IndexPool, event);
-  updateDailySnapshot(pool as IndexPool, event);
+  //updateDailySnapshot(pool as IndexPool, event);
   pool.feesTotalUSD = pool.feesTotalUSD.plus(swapFeeValue)
   pool.totalSwapVolumeUSD = pool.totalSwapVolumeUSD.plus(swapValue)
   pool.totalVolumeUSD = pool.totalVolumeUSD.plus(swapValue)
@@ -315,6 +313,7 @@ export function handleSwap(event: LOG_SWAP): void {
   swap.timestamp = event.block.timestamp.toI32();
   pool.save();
   swap.save();
+  updateHourelySnapshot
 }
 
 export function handleJoin(event: LOG_JOIN): void {
@@ -330,7 +329,7 @@ export function handleJoin(event: LOG_JOIN): void {
   pool.save();
   updateTokenPrices(pool as IndexPool);
   updateHourelySnapshot(pool, event);
-  updateDailySnapshot(pool, event);
+  //updateDailySnapshot(pool, event);
 }
 
 export function handleExit(event: LOG_EXIT): void {
@@ -346,7 +345,7 @@ export function handleExit(event: LOG_EXIT): void {
   pool.totalVolumeUSD = pool.totalVolumeUSD.plus(usdValue);
   pool.save();
   updateHourelySnapshot(pool, event);
-  updateDailySnapshot(pool, event);
+  //updateDailySnapshot(pool, event);
 }
 
 export function handleDenormUpdated(event: LOG_DENORM_UPDATED): void {
@@ -366,7 +365,7 @@ export function handleDenormUpdated(event: LOG_DENORM_UPDATED): void {
   token.save();
   updateTokenPrices(pool as IndexPool);
   updateHourelySnapshot(pool as IndexPool, event);
-  updateDailySnapshot(pool as IndexPool, event);
+  //updateDailySnapshot(pool as IndexPool, event);
 }
 
 export function handleDesiredDenormSet(event: LOG_DESIRED_DENORM_SET): void {
@@ -401,8 +400,9 @@ export function handleTransfer(event: Transfer): void {
   }*/
   pool.save();
   updateTokenPrices(pool as IndexPool);
+  //updateDailySnapshot(pool, event);
   updateHourelySnapshot(pool, event);
-  updateDailySnapshot(pool, event);
+  
 }
 
 export function handlePoolTokenRemoved(event: LOG_TOKEN_REMOVED): void {
@@ -459,7 +459,7 @@ export function handleMaxTokensUpdated(event: LOG_MAX_TOKENS_UPDATED): void {
   pool.save();
   updateTokenPrices(pool as IndexPool);
   updateHourelySnapshot(pool as IndexPool, event);
-  updateDailySnapshot( pool as IndexPool, event);
+  //updateDailySnapshot( pool as IndexPool, event);
 }
 
 export function handleSwapFeeUpdated(event: LOG_SWAP_FEE_UPDATED): void {
@@ -469,7 +469,7 @@ export function handleSwapFeeUpdated(event: LOG_SWAP_FEE_UPDATED): void {
   pool.save();
   updateTokenPrices(pool as IndexPool);
   updateHourelySnapshot(pool as IndexPool, event);
-  updateDailySnapshot( pool as IndexPool, event);
+  //updateDailySnapshot( pool as IndexPool, event);
 }
 
 
